@@ -3,7 +3,7 @@ package com.kimminwoo.jpademo.post.application;
 import com.kimminwoo.jpademo.exception.NotFoundException;
 import com.kimminwoo.jpademo.member.domain.Member;
 import com.kimminwoo.jpademo.member.domain.repository.MemberRepository;
-import com.kimminwoo.jpademo.post.api.dto.response.PostDto;
+import com.kimminwoo.jpademo.post.api.dto.response.PostResponseDto;
 import com.kimminwoo.jpademo.post.domain.Post;
 import com.kimminwoo.jpademo.post.domain.respository.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,30 +18,27 @@ public class PostService {
     private final MemberRepository memberRepo;
 
     @Transactional
-    public PostDto create(Long memberId, String title, String content) {
-        Member m = memberRepo.findById(memberId)
+    public PostResponseDto create(Long memberId, String title, String content) {
+        Member member = memberRepo.findById(memberId)
                 .orElseThrow(() -> new NotFoundException("Member not found: " + memberId));
-        Post p = Post.builder().title(title).content(content).member(m).build();
-        Post saved = postRepo.save(p);
-        return new PostDto(saved.getId(), saved.getTitle(), saved.getContent(), m.getId());
+        Post post = Post.builder().title(title).content(content).member(member).build();
+        Post saved = postRepo.save(post);
+        return PostResponseDto.from(saved);
     }
 
     @Transactional(readOnly = true)
-    public PostDto get(Long id) {
-        Post p = postRepo.findById(id)
+    public PostResponseDto get(Long id) {
+        Post post = postRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Post not found: " + id));
-        Long memberId = (p.getMember() != null) ? p.getMember().getId() : null;
-        return new PostDto(p.getId(), p.getTitle(), p.getContent(), memberId);
+        return PostResponseDto.from(post);
     }
 
     @Transactional
-    public PostDto update(Long id, String title, String content) {
-        Post p = postRepo.findById(id)
+    public PostResponseDto update(Long id, String title, String content) {
+        Post post = postRepo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Post not found: " + id));
-        p.setTitle(title);
-        p.setContent(content);
-        return new PostDto(p.getId(), p.getTitle(), p.getContent(),
-                p.getMember() != null ? p.getMember().getId() : null);
+        post.update(title, content);
+        return PostResponseDto.from(post);
     }
 
     @Transactional
@@ -49,5 +46,7 @@ public class PostService {
         if (!postRepo.existsById(id)) throw new NotFoundException("Post not found: " + id);
         postRepo.deleteById(id);
     }
+
 }
+
 

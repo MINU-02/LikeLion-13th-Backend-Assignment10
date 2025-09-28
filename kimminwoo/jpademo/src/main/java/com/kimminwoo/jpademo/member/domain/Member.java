@@ -8,8 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Member {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -21,10 +21,9 @@ public class Member {
     @OneToMany(mappedBy = "member", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts = new ArrayList<>();
 
-    // 양방향 편의 메서드
-    public void addPost(Post p) {
-        posts.add(p);
-        p.setMember(this);
+    @Builder
+    public Member(String nickname) { // id는 제외!
+        this.nickname = nickname;
     }
-}
 
+}

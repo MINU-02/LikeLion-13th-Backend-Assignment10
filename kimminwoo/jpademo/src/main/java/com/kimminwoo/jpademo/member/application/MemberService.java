@@ -1,7 +1,7 @@
 package com.kimminwoo.jpademo.member.application;
 
 import com.kimminwoo.jpademo.exception.NotFoundException;
-import com.kimminwoo.jpademo.member.api.dto.response.MemberDto;
+import com.kimminwoo.jpademo.member.api.dto.response.MemberResponseDto;
 import com.kimminwoo.jpademo.member.domain.Member;
 import com.kimminwoo.jpademo.member.domain.repository.MemberRepository;
 import com.kimminwoo.jpademo.post.domain.Post;
@@ -20,51 +20,24 @@ public class MemberService {
     private final PostRepository postRepo;
 
     @Transactional(readOnly = true)
-    public java.util.List<MemberDto> findAll() {
+    public java.util.List<MemberResponseDto> findAll() {
         return memberRepo.findAll().stream()
-                .map(m -> new MemberDto(
-                        m.getId(),
-                        m.getNickname(),
-                        m.getPosts().stream()
-                                .map(p -> new MemberDto.PostSummary(p.getId(), p.getTitle()))
-                                .collect(Collectors.toList())
-                ))
+                .map(MemberResponseDto::from)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public MemberDto findOneWithPosts(Long id) {
+    public MemberResponseDto findOneWithPosts(Long id) {
         Member m = memberRepo.findWithPostsById(id)
                 .orElseThrow(() -> new NotFoundException("Member not found: " + id));
-        return new MemberDto(
-                m.getId(),
-                m.getNickname(),
-                m.getPosts().stream()
-                        .map(p -> new MemberDto.PostSummary(p.getId(), p.getTitle()))
-                        .toList()
-        );
+        return MemberResponseDto.from(m);
     }
 
     @Transactional
-    public MemberDto createMember(String nickname) {
+    public MemberResponseDto createMember(String nickname) {
         Member saved = memberRepo.save(Member.builder().nickname(nickname).build());
-        return new MemberDto(saved.getId(), saved.getNickname(), java.util.List.of());
+        return MemberResponseDto.from(saved);
     }
 
-    @Transactional
-    public MemberDto addPost(Long memberId, String title, String content) {
-        Member m = memberRepo.findById(memberId)
-                .orElseThrow(() -> new NotFoundException("Member not found: " + memberId));
-        Post p = Post.builder().title(title).content(content).build();
-        m.addPost(p);           // 양방향 세팅
-        postRepo.save(p);       // 주인(Post) 저장
-        return new MemberDto(
-                m.getId(),
-                m.getNickname(),
-                m.getPosts().stream()
-                        .map(pp -> new MemberDto.PostSummary(pp.getId(), pp.getTitle()))
-                        .toList()
-        );
-    }
 }
 
