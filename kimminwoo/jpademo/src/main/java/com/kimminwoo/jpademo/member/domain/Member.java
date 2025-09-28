@@ -26,4 +26,8 @@ public class Member {
         this.nickname = nickname;
     }
 
+    public void addPost(Post post) {
+        posts.add(post);
+    }
+
 }

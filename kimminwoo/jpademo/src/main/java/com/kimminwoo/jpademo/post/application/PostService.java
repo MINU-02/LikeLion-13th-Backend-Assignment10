@@ -22,6 +22,7 @@ public class PostService {
         Member member = memberRepo.findById(memberId)
                 .orElseThrow(() -> new NotFoundException("Member not found: " + memberId));
         Post post = Post.builder().title(title).content(content).member(member).build();
+        member.addPost(post);
         Post saved = postRepo.save(post);
         return PostResponseDto.from(saved);
     }
